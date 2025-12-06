@@ -1,10 +1,19 @@
 package com.example.ticketreservation.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.example.ticketreservation.dto.EventRequest;
 import com.example.ticketreservation.dto.EventResponse;
 import com.example.ticketreservation.entity.Event;
 import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.repository.EventRepository;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,16 +22,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class EventServiceTest {
@@ -129,8 +128,7 @@ class EventServiceTest {
         @Test
         @DisplayName("should return available events")
         void shouldReturnAvailableEvents() {
-            when(eventRepository.findAvailableEvents(any(LocalDateTime.class)))
-                    .thenReturn(List.of(testEvent));
+            when(eventRepository.findAvailableEvents(any(LocalDateTime.class))).thenReturn(List.of(testEvent));
 
             List<EventResponse> result = eventService.getAvailableEvents();
 
@@ -146,8 +144,7 @@ class EventServiceTest {
         @Test
         @DisplayName("should return events matching search term")
         void shouldReturnEventsMatchingSearchTerm() {
-            when(eventRepository.findByNameContainingIgnoreCase("Concert"))
-                    .thenReturn(List.of(testEvent));
+            when(eventRepository.findByNameContainingIgnoreCase("Concert")).thenReturn(List.of(testEvent));
 
             List<EventResponse> result = eventService.searchEventsByName("Concert");
 
@@ -158,8 +155,7 @@ class EventServiceTest {
         @Test
         @DisplayName("should return empty list when no match")
         void shouldReturnEmptyListWhenNoMatch() {
-            when(eventRepository.findByNameContainingIgnoreCase("NonExistent"))
-                    .thenReturn(List.of());
+            when(eventRepository.findByNameContainingIgnoreCase("NonExistent")).thenReturn(List.of());
 
             List<EventResponse> result = eventService.searchEventsByName("NonExistent");
 
@@ -291,8 +287,7 @@ class EventServiceTest {
         void shouldThrowExceptionWhenEventNotFound() {
             when(eventRepository.findById(999L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> eventService.deleteEvent(999L))
-                    .isInstanceOf(ResourceNotFoundException.class);
+            assertThatThrownBy(() -> eventService.deleteEvent(999L)).isInstanceOf(ResourceNotFoundException.class);
         }
     }
 }

@@ -5,13 +5,12 @@ import com.example.ticketreservation.dto.EventResponse;
 import com.example.ticketreservation.entity.Event;
 import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.repository.EventRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,14 +20,11 @@ public class EventService {
     private final EventRepository eventRepository;
 
     public List<EventResponse> getAllEvents() {
-        return eventRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return eventRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     public EventResponse getEventById(Long id) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
+        Event event = eventRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
         return mapToResponse(event);
     }
 
@@ -62,8 +58,7 @@ public class EventService {
 
     @Transactional
     public EventResponse updateEvent(Long id, EventRequest request) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
+        Event event = eventRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
 
         int seatsDifference = request.getTotalSeats() - event.getTotalSeats();
 
@@ -81,8 +76,7 @@ public class EventService {
 
     @Transactional
     public void deleteEvent(Long id) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
+        Event event = eventRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
         eventRepository.delete(event);
     }
 
