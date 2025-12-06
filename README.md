@@ -139,7 +139,7 @@ curl -X PATCH http://localhost:8080/api/tickets/1/cancel
 In the `docker` profile, Redis caching is enabled for improved performance:
 
 - **Events**: Cached on read, invalidated on create/update/delete
-- **Tickets**: Cached on read, invalidated on create/cancel
+- **Tickets**: Not cached (ticket creation/cancellation invalidates related event cache)
 
 Cache is disabled in `test` and `ci` profiles for simpler testing.
 
