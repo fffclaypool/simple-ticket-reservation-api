@@ -150,8 +150,8 @@ jobs:
           tar -xzf /tmp/jmeter.tgz -C /opt
           echo "/opt/apache-jmeter-${JMETER_VERSION}/bin" >> $GITHUB_PATH
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Grant execute permission for scripts
+        run: chmod +x gradlew run-load-test.sh
 
       - name: Build application
         run: ./gradlew build -x test -x checkstyleMain -x checkstyleTest -x spotlessCheck
@@ -177,33 +177,8 @@ jobs:
           cat app.log || true
           exit 1
 
-      - name: Run JMeter load test
-        run: |
-          jmeter -n -t jmeter/ticket_booking_load_test.jmx -l results.jtl -j jmeter.log
-
-      - name: Verify load test results
-        run: |
-          echo "=== Load Test Results ==="
-          cat results.jtl
-          echo ""
-          echo "=== Checking for overbooking ==="
-          # Count only "Book Ticket" requests, excluding "Create Test Event" and "Get Final Event State"
-          # Use awk to check the 4th field (responseCode) to avoid false matches in other fields
-          SUCCESS_COUNT=$(awk -F',' '$3 == "Book Ticket" && $4 == "201"' results.jtl | wc -l)
-          FAIL_COUNT=$(awk -F',' '$3 == "Book Ticket" && $4 == "400"' results.jtl | wc -l)
-          ERROR_COUNT=$(awk -F',' '$3 == "Book Ticket" && $4 == "500"' results.jtl | wc -l)
-          echo "Successful bookings (201): $SUCCESS_COUNT"
-          echo "No seats available (400): $FAIL_COUNT"
-          echo "Server errors (500): $ERROR_COUNT"
-          if [ "$ERROR_COUNT" -gt 0 ]; then
-            echo "ERROR: Server errors occurred during load test"
-            exit 1
-          fi
-          if [ "$SUCCESS_COUNT" -ne 10 ]; then
-            echo "ERROR: Expected exactly 10 successful bookings, got $SUCCESS_COUNT"
-            exit 1
-          fi
-          echo "Load test passed: No overbooking detected"
+      - name: Run load test
+        run: ./run-load-test.sh --ci
 
       - name: Stop application
         if: always()
@@ -218,6 +193,5 @@ jobs:
         with:
           name: jmeter-results
           path: |
-            results.jtl
-            jmeter.log
+            build/jmeter-results/
             app.log
