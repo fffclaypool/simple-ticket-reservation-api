@@ -1,138 +1,138 @@
-# チケット予約システム REST API
+# Ticket Reservation System REST API
 
-Java 17、Spring Boot 3.2を使用したチケット予約システムのREST APIです。
+A REST API for a ticket reservation system built with Java 17 and Spring Boot 3.2.
 
-## 必要条件
+## Requirements
 
-- Java 17以上
-- Gradle 8.5以上（Gradle Wrapperを使用する場合は不要）
+- Java 17 or higher
+- Gradle 8.5 or higher (not required if using Gradle Wrapper)
 
-## セットアップ
+## Setup
 
 ```bash
 cd ticket-reservation-api
 ```
 
-## 起動方法
+## Running the Application
 
-### 開発モード（H2データベース）
+### Development Mode (H2 Database)
 
 ```bash
 ./gradlew bootRun
 ```
 
-アプリケーションは `http://localhost:8080` で起動します。
+The application will start at `http://localhost:8080`.
 
-H2データベースコンソール: `http://localhost:8080/h2-console`
+H2 Database Console: `http://localhost:8080/h2-console`
 - JDBC URL: `jdbc:h2:mem:ticketdb`
 - Username: `sa`
-- Password: （空欄）
+- Password: (leave empty)
 
-### 本番モード（PostgreSQL）
+### Production Mode (PostgreSQL)
 
 ```bash
 ./gradlew bootRun --args='--spring.profiles.active=prod'
 ```
 
-環境変数でデータベース接続情報を設定してください：
-- `DB_USERNAME`: PostgreSQLユーザー名（デフォルト: postgres）
-- `DB_PASSWORD`: PostgreSQLパスワード（デフォルト: postgres）
+Set the database connection information via environment variables:
+- `DB_USERNAME`: PostgreSQL username (default: postgres)
+- `DB_PASSWORD`: PostgreSQL password (default: postgres)
 
-## API エンドポイント
+## API Endpoints
 
-### イベント管理
+### Event Management
 
-| メソッド | エンドポイント | 説明 |
-|---------|---------------|------|
-| GET | `/api/events` | 全イベント取得 |
-| GET | `/api/events/{id}` | ID指定でイベント取得 |
-| GET | `/api/events/available` | 予約可能なイベント取得 |
-| GET | `/api/events/search?name={name}` | イベント名で検索 |
-| POST | `/api/events` | イベント作成 |
-| PUT | `/api/events/{id}` | イベント更新 |
-| DELETE | `/api/events/{id}` | イベント削除 |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/events` | Get all events |
+| GET | `/api/events/{id}` | Get event by ID |
+| GET | `/api/events/available` | Get available events |
+| GET | `/api/events/search?name={name}` | Search events by name |
+| POST | `/api/events` | Create event |
+| PUT | `/api/events/{id}` | Update event |
+| DELETE | `/api/events/{id}` | Delete event |
 
-### 予約管理
+### Reservation Management
 
-| メソッド | エンドポイント | 説明 |
-|---------|---------------|------|
-| GET | `/api/reservations` | 全予約取得 |
-| GET | `/api/reservations/{id}` | ID指定で予約取得 |
-| GET | `/api/reservations/code/{code}` | 予約コードで検索 |
-| GET | `/api/reservations/email/{email}` | メールアドレスで検索 |
-| GET | `/api/reservations/event/{eventId}` | イベントIDで検索 |
-| POST | `/api/reservations` | 予約作成 |
-| PATCH | `/api/reservations/{id}/cancel` | 予約キャンセル |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/reservations` | Get all reservations |
+| GET | `/api/reservations/{id}` | Get reservation by ID |
+| GET | `/api/reservations/code/{code}` | Search by reservation code |
+| GET | `/api/reservations/email/{email}` | Search by email address |
+| GET | `/api/reservations/event/{eventId}` | Search by event ID |
+| POST | `/api/reservations` | Create reservation |
+| PATCH | `/api/reservations/{id}/cancel` | Cancel reservation |
 
-## 使用例
+## Usage Examples
 
-### イベント作成
+### Create Event
 
 ```bash
 curl -X POST http://localhost:8080/api/events \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "サマーコンサート2024",
-    "description": "夏の野外コンサート",
-    "venue": "東京ドーム",
+    "name": "Summer Concert 2024",
+    "description": "Outdoor summer concert",
+    "venue": "Tokyo Dome",
     "eventDate": "2024-08-15T18:00:00",
     "totalSeats": 500,
     "price": 8000
   }'
 ```
 
-### イベント一覧取得
+### Get All Events
 
 ```bash
 curl http://localhost:8080/api/events
 ```
 
-### 予約作成
+### Create Reservation
 
 ```bash
 curl -X POST http://localhost:8080/api/reservations \
   -H "Content-Type: application/json" \
   -d '{
     "eventId": 1,
-    "customerName": "山田太郎",
-    "customerEmail": "yamada@example.com",
+    "customerName": "John Doe",
+    "customerEmail": "john@example.com",
     "numberOfSeats": 2
   }'
 ```
 
-### 予約コードで検索
+### Search by Reservation Code
 
 ```bash
 curl http://localhost:8080/api/reservations/code/RES-XXXXXXXX
 ```
 
-### 予約キャンセル
+### Cancel Reservation
 
 ```bash
 curl -X PATCH http://localhost:8080/api/reservations/1/cancel
 ```
 
-## ヘルスチェック
+## Health Check
 
-Spring Boot Actuatorによるヘルスチェックエンドポイント：
+Health check endpoint provided by Spring Boot Actuator:
 
 ```bash
 curl http://localhost:8080/actuator/health
 ```
 
-## ビルド
+## Build
 
 ```bash
 ./gradlew build
 ```
 
-実行可能JARファイルは `build/libs/ticket-reservation-api-0.0.1-SNAPSHOT.jar` に生成されます。
+The executable JAR file will be generated at `build/libs/ticket-reservation-api-0.0.1-SNAPSHOT.jar`.
 
 ```bash
 java -jar build/libs/ticket-reservation-api-0.0.1-SNAPSHOT.jar
 ```
 
-## テスト
+## Test
 
 ```bash
 ./gradlew test
