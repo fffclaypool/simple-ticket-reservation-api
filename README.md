@@ -7,12 +7,6 @@ A REST API for a ticket reservation system built with Java 17 and Spring Boot 3.
 - Java 17 or higher
 - Gradle 8.5 or higher (not required if using Gradle Wrapper)
 
-## Setup
-
-```bash
-cd ticket-reservation-api
-```
-
 ## Running the Application
 
 ### Development Mode (H2 Database)
@@ -52,17 +46,17 @@ Set the database connection information via environment variables:
 | PUT | `/api/events/{id}` | Update event |
 | DELETE | `/api/events/{id}` | Delete event |
 
-### Reservation Management
+### Ticket Management
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/reservations` | Get all reservations |
-| GET | `/api/reservations/{id}` | Get reservation by ID |
-| GET | `/api/reservations/code/{code}` | Search by reservation code |
-| GET | `/api/reservations/email/{email}` | Search by email address |
-| GET | `/api/reservations/event/{eventId}` | Search by event ID |
-| POST | `/api/reservations` | Create reservation |
-| PATCH | `/api/reservations/{id}/cancel` | Cancel reservation |
+| GET | `/api/tickets` | Get all tickets |
+| GET | `/api/tickets/{id}` | Get ticket by ID |
+| GET | `/api/tickets/code/{code}` | Search by ticket code |
+| GET | `/api/tickets/email/{email}` | Search by email address |
+| GET | `/api/events/{eventId}/tickets` | Get tickets for an event |
+| POST | `/api/events/{eventId}/tickets` | Create ticket (with pessimistic locking) |
+| PATCH | `/api/tickets/{id}/cancel` | Cancel ticket |
 
 ## Usage Examples
 
@@ -87,29 +81,30 @@ curl -X POST http://localhost:8080/api/events \
 curl http://localhost:8080/api/events
 ```
 
-### Create Reservation
+### Create Ticket
 
 ```bash
-curl -X POST http://localhost:8080/api/reservations \
+curl -X POST http://localhost:8080/api/events/1/tickets \
   -H "Content-Type: application/json" \
   -d '{
-    "eventId": 1,
     "customerName": "John Doe",
     "customerEmail": "john@example.com",
     "numberOfSeats": 2
   }'
 ```
 
-### Search by Reservation Code
+This endpoint uses pessimistic locking to prevent overbooking when multiple concurrent requests are made.
+
+### Search by Ticket Code
 
 ```bash
-curl http://localhost:8080/api/reservations/code/RES-XXXXXXXX
+curl http://localhost:8080/api/tickets/code/TKT-XXXXXXXX
 ```
 
-### Cancel Reservation
+### Cancel Ticket
 
 ```bash
-curl -X PATCH http://localhost:8080/api/reservations/1/cancel
+curl -X PATCH http://localhost:8080/api/tickets/1/cancel
 ```
 
 ## Health Check
@@ -137,3 +132,52 @@ java -jar build/libs/ticket-reservation-api-0.0.1-SNAPSHOT.jar
 ```bash
 ./gradlew test
 ```
+
+## Load Testing
+
+JMeter is used to verify that pessimistic locking prevents overbooking under concurrent load.
+
+### Requirements
+
+- JMeter 5.6.3 or higher
+
+### Run Load Test
+
+1. Start the application:
+   ```bash
+   ./gradlew bootRun
+   ```
+
+2. Run JMeter test (in another terminal):
+   ```bash
+   jmeter -n -t jmeter/ticket_booking_load_test.jmx -l results.jtl
+   ```
+
+The test creates an event with 10 seats and sends 20 concurrent booking requests. With pessimistic locking, exactly 10 bookings succeed and 10 fail with "No seats available".
+
+## Code Quality
+
+### Formatter (Spotless)
+
+```bash
+# Check format
+./gradlew spotlessCheck
+
+# Apply format
+./gradlew spotlessApply
+```
+
+### Linter (Checkstyle)
+
+```bash
+./gradlew checkstyleMain checkstyleTest
+```
+
+## CI/CD
+
+GitHub Actions workflow runs on push/PR to main:
+
+1. **lint**: Code format check (Spotless) and static analysis (Checkstyle)
+2. **test**: Unit and integration tests
+3. **build**: Build application JAR
+4. **load-test**: JMeter load test to verify no overbooking

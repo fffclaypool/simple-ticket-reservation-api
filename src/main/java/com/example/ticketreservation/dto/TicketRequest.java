@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ReservationRequest {
-    private Long eventId;
+public class TicketRequest {
     private String customerName;
     private String customerEmail;
     private Integer numberOfSeats;

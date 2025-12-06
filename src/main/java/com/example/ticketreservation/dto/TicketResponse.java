@@ -1,6 +1,6 @@
 package com.example.ticketreservation.dto;
 
-import com.example.ticketreservation.entity.ReservationStatus;
+import com.example.ticketreservation.entity.TicketStatus;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,16 +11,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ReservationResponse {
+public class TicketResponse {
     private Long id;
-    private String reservationCode;
+    private String ticketCode;
     private Long eventId;
     private String eventName;
     private String customerName;
     private String customerEmail;
     private Integer numberOfSeats;
     private Double totalAmount;
-    private ReservationStatus status;
+    private TicketStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

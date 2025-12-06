@@ -10,6 +10,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,9 +52,12 @@ public class Event {
     @Column(nullable = false)
     private Double price;
 
+    @Version
+    private Long version;
+
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<Reservation> reservations = new ArrayList<>();
+    private List<Ticket> tickets = new ArrayList<>();
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
