@@ -6,13 +6,32 @@ A REST API for a ticket reservation system built with Java 17 and Spring Boot 3.
 
 - Java 17 or higher
 - Gradle 8.5 or higher (not required if using Gradle Wrapper)
+- Docker & Docker Compose (for DevContainer development)
 
 ## Running the Application
 
-### Development Mode (H2 Database)
+### DevContainer Mode (PostgreSQL + Redis) - Recommended
+
+The recommended way to develop is using VS Code DevContainers with Docker Compose. This provides:
+- PostgreSQL 15 database
+- Redis 7 for caching
+- Pre-configured Java development environment
+
+1. Open the project in VS Code
+2. Click "Reopen in Container" when prompted (or use Command Palette: "Dev Containers: Reopen in Container")
+3. Run the application:
+   ```bash
+   ./gradlew bootRun
+   ```
+
+The `docker` profile is automatically activated in DevContainer.
+
+### Test Mode (H2 Database)
+
+For local testing without Docker:
 
 ```bash
-./gradlew bootRun
+./gradlew bootRun --args='--spring.profiles.active=test'
 ```
 
 The application will start at `http://localhost:8080`.
@@ -22,15 +41,23 @@ H2 Database Console: `http://localhost:8080/h2-console`
 - Username: `sa`
 - Password: (leave empty)
 
-### Production Mode (PostgreSQL)
+### Profiles
 
-```bash
-./gradlew bootRun --args='--spring.profiles.active=prod'
-```
+| Profile | Database | Cache | Usage |
+|---------|----------|-------|-------|
+| `docker` | PostgreSQL | Redis | DevContainer development (default) |
+| `test` | H2 | None | Local testing without Docker |
+| `ci` | H2 | None | GitHub Actions CI/CD |
 
-Set the database connection information via environment variables:
-- `DB_USERNAME`: PostgreSQL username (default: postgres)
-- `DB_PASSWORD`: PostgreSQL password (default: postgres)
+### Docker Compose Services
+
+When using DevContainer, the following services are started:
+
+| Service | Image | Port | Description |
+|---------|-------|------|-------------|
+| `app` | Custom | - | Java development container |
+| `postgres` | postgres:15 | 5432 | PostgreSQL database |
+| `redis` | redis:7 | 6379 | Redis cache |
 
 ## API Endpoints
 
@@ -107,6 +134,15 @@ curl http://localhost:8080/api/tickets/code/TKT-XXXXXXXX
 curl -X PATCH http://localhost:8080/api/tickets/1/cancel
 ```
 
+## Caching
+
+In the `docker` profile, Redis caching is enabled for improved performance:
+
+- **Events**: Cached on read, invalidated on create/update/delete
+- **Tickets**: Cached on read, invalidated on create/cancel
+
+Cache is disabled in `test` and `ci` profiles for simpler testing.
+
 ## Health Check
 
 Health check endpoint provided by Spring Boot Actuator:
@@ -143,9 +179,9 @@ JMeter is used to verify that pessimistic locking prevents overbooking under con
 
 ### Run Load Test
 
-1. Start the application:
+1. Start the application with `test` or `ci` profile (uses H2 database):
    ```bash
-   ./gradlew bootRun
+   ./gradlew bootRun --args='--spring.profiles.active=test'
    ```
 
 2. Run JMeter test (in another terminal):
@@ -154,6 +190,8 @@ JMeter is used to verify that pessimistic locking prevents overbooking under con
    ```
 
 The test creates an event with 10 seats and sends 20 concurrent booking requests. With pessimistic locking, exactly 10 bookings succeed and 10 fail with "No seats available".
+
+Note: CI/CD uses the `ci` profile which automatically disables Redis caching.
 
 ## Code Quality
 
