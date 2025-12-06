@@ -25,6 +25,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 
 @ExtendWith(MockitoExtension.class)
 class TicketServiceTest {
@@ -34,6 +36,12 @@ class TicketServiceTest {
 
     @Mock
     private EventRepository eventRepository;
+
+    @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache cache;
 
     @InjectMocks
     private TicketService ticketService;
@@ -267,11 +275,13 @@ class TicketServiceTest {
             when(ticketRepository.findById(1L)).thenReturn(Optional.of(testTicket));
             when(ticketRepository.save(any(Ticket.class))).thenReturn(testTicket);
             when(eventRepository.save(any(Event.class))).thenReturn(testEvent);
+            when(cacheManager.getCache("events")).thenReturn(cache);
 
             TicketResponse result = ticketService.cancelTicket(1L);
 
             assertThat(result.getStatus()).isEqualTo(TicketStatus.CANCELLED);
             verify(ticketRepository).save(any(Ticket.class));
+            verify(cache).evict(testEvent.getId());
         }
 
         @Test
@@ -300,6 +310,7 @@ class TicketServiceTest {
             when(ticketRepository.findById(1L)).thenReturn(Optional.of(testTicket));
             when(ticketRepository.save(any(Ticket.class))).thenReturn(testTicket);
             when(eventRepository.save(any(Event.class))).thenReturn(testEvent);
+            when(cacheManager.getCache("events")).thenReturn(cache);
 
             ticketService.cancelTicket(1L);
 

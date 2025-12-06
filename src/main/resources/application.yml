@@ -3,7 +3,7 @@ spring:
     name: ticket-reservation-api
 
   profiles:
-    active: dev
+    active: docker
 
   jpa:
     hibernate:
@@ -13,12 +13,33 @@ spring:
       hibernate:
         format_sql: true
 
+  cache:
+    type: redis
+
 ---
-# Development profile (H2)
+# Docker profile (PostgreSQL + Redis) - for DevContainer
 spring:
   config:
     activate:
-      on-profile: dev
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/ticketdb
+    driver-class-name: org.postgresql.Driver
+    username: ticketuser
+    password: ticketpass
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+---
+# Test profile (H2 + no cache)
+spring:
+  config:
+    activate:
+      on-profile: test
 
   datasource:
     url: jdbc:h2:mem:ticketdb;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000
@@ -31,23 +52,34 @@ spring:
       enabled: true
       path: /h2-console
 
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+
+  cache:
+    type: none
+
 ---
-# Production profile (PostgreSQL)
+# CI profile (H2 + no cache) for GitHub Actions
 spring:
   config:
     activate:
-      on-profile: prod
+      on-profile: ci
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/ticketdb
-    driver-class-name: org.postgresql.Driver
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:h2:mem:ticketdb;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
 
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+
+  cache:
+    type: none
 
 ---
 # Actuator configuration

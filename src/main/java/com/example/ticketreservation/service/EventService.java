@@ -9,13 +9,19 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class EventService {
+
+    private static final String CACHE_NAME = "events";
 
     private final EventRepository eventRepository;
 
@@ -23,7 +29,9 @@ public class EventService {
         return eventRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
+    @Cacheable(value = CACHE_NAME, key = "#id")
     public EventResponse getEventById(Long id) {
+        log.info("Fetching event from database: id={}", id);
         Event event = eventRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
         return mapToResponse(event);
     }
@@ -57,7 +65,9 @@ public class EventService {
     }
 
     @Transactional
+    @CacheEvict(value = CACHE_NAME, key = "#id")
     public EventResponse updateEvent(Long id, EventRequest request) {
+        log.info("Updating event and evicting cache: id={}", id);
         Event event = eventRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
 
         int seatsDifference = request.getTotalSeats() - event.getTotalSeats();
@@ -75,7 +85,9 @@ public class EventService {
     }
 
     @Transactional
+    @CacheEvict(value = CACHE_NAME, key = "#id")
     public void deleteEvent(Long id) {
+        log.info("Deleting event and evicting cache: id={}", id);
         Event event = eventRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
         eventRepository.delete(event);
     }
