@@ -118,3 +118,104 @@ jobs:
         with:
           name: app-jar
           path: build/libs/*.jar
+
+  load-test:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Download and install JMeter
+        run: |
+          JMETER_VERSION=5.6.3
+          curl -fsSL https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz -o /tmp/jmeter.tgz
+          tar -xzf /tmp/jmeter.tgz -C /opt
+          echo "/opt/apache-jmeter-${JMETER_VERSION}/bin" >> $GITHUB_PATH
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build application
+        run: ./gradlew build -x test -x checkstyleMain -x checkstyleTest -x spotlessCheck
+
+      - name: Start application
+        run: |
+          nohup java -jar build/libs/ticket-reservation-api-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
+          echo $! > app.pid
+          sleep 15
+
+      - name: Wait for application to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/actuator/health | grep -q "UP"; then
+              echo "Application is ready"
+              exit 0
+            fi
+            echo "Waiting for application... ($i/30)"
+            sleep 2
+          done
+          echo "Application failed to start"
+          echo "=== Application Log ==="
+          cat app.log || true
+          exit 1
+
+      - name: Run JMeter load test
+        run: |
+          jmeter -n -t jmeter/ticket_booking_load_test.jmx -l results.jtl -j jmeter.log
+
+      - name: Verify load test results
+        run: |
+          echo "=== Load Test Results ==="
+          cat results.jtl
+          echo ""
+          echo "=== Checking for overbooking ==="
+          SUCCESS_COUNT=$(grep ",201," results.jtl | wc -l)
+          FAIL_COUNT=$(grep ",400," results.jtl | wc -l)
+          ERROR_COUNT=$(grep ",500," results.jtl | wc -l)
+          echo "Successful bookings (201): $SUCCESS_COUNT"
+          echo "No seats available (400): $FAIL_COUNT"
+          echo "Server errors (500): $ERROR_COUNT"
+          if [ "$ERROR_COUNT" -gt 0 ]; then
+            echo "ERROR: Server errors occurred during load test"
+            exit 1
+          fi
+          if [ "$SUCCESS_COUNT" -ne 10 ]; then
+            echo "ERROR: Expected exactly 10 successful bookings, got $SUCCESS_COUNT"
+            exit 1
+          fi
+          echo "Load test passed: No overbooking detected"
+
+      - name: Stop application
+        if: always()
+        run: |
+          if [ -f app.pid ]; then
+            kill $(cat app.pid) || true
+          fi
+
+      - name: Upload JMeter results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jmeter-results
+          path: |
+            results.jtl
+            jmeter.log
+            app.log

@@ -1,6 +1,6 @@
 package com.example.ticketreservation.entity;
 
-public enum ReservationStatus {
+public enum TicketStatus {
     CONFIRMED,
     CANCELLED,
     COMPLETED

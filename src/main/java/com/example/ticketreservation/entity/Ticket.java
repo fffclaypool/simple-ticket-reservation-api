@@ -20,19 +20,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "reservations")
+@Table(name = "tickets")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Reservation {
+public class Ticket {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "reservation_code", nullable = false, unique = true)
-    private String reservationCode;
+    @Column(name = "ticket_code", nullable = false, unique = true)
+    private String ticketCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
@@ -53,7 +53,7 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private ReservationStatus status = ReservationStatus.CONFIRMED;
+    private TicketStatus status = TicketStatus.CONFIRMED;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

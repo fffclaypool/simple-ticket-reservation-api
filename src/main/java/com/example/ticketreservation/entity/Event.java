@@ -53,7 +53,7 @@ public class Event {
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<Reservation> reservations = new ArrayList<>();
+    private List<Ticket> tickets = new ArrayList<>();
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
