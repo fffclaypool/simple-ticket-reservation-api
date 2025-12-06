@@ -188,9 +188,10 @@ jobs:
           echo ""
           echo "=== Checking for overbooking ==="
           # Count only "Book Ticket" requests, excluding "Create Test Event" and "Get Final Event State"
-          SUCCESS_COUNT=$(grep "Book Ticket" results.jtl | grep ",201," | wc -l)
-          FAIL_COUNT=$(grep "Book Ticket" results.jtl | grep ",400," | wc -l)
-          ERROR_COUNT=$(grep "Book Ticket" results.jtl | grep ",500," | wc -l)
+          # Use awk to check the 4th field (responseCode) to avoid false matches in other fields
+          SUCCESS_COUNT=$(awk -F',' '$3 == "Book Ticket" && $4 == "201"' results.jtl | wc -l)
+          FAIL_COUNT=$(awk -F',' '$3 == "Book Ticket" && $4 == "400"' results.jtl | wc -l)
+          ERROR_COUNT=$(awk -F',' '$3 == "Book Ticket" && $4 == "500"' results.jtl | wc -l)
           echo "Successful bookings (201): $SUCCESS_COUNT"
           echo "No seats available (400): $FAIL_COUNT"
           echo "Server errors (500): $ERROR_COUNT"
