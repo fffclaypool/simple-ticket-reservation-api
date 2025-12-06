@@ -63,7 +63,7 @@ public class TicketService {
                 request.getCustomerEmail(),
                 request.getNumberOfSeats());
 
-        // Acquire pessimistic lock on the event row
+        // Acquire pessimistic lock on the event row - this blocks other transactions
         Event event = eventRepository
                 .findByIdWithLock(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event", "id", eventId));
@@ -83,9 +83,9 @@ public class TicketService {
             throw new RuntimeException("Ticket creation interrupted", e);
         }
 
-        // Decrease available seats
+        // Decrease available seats and flush immediately to ensure lock is released with updated data
         event.setAvailableSeats(event.getAvailableSeats() - request.getNumberOfSeats());
-        eventRepository.save(event);
+        eventRepository.saveAndFlush(event);
 
         // Create and save ticket
         Ticket ticket = Ticket.builder()

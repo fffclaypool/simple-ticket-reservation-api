@@ -208,7 +208,7 @@ class TicketServiceTest {
                 ticket.setId(1L);
                 return ticket;
             });
-            when(eventRepository.save(any(Event.class))).thenReturn(testEvent);
+            when(eventRepository.saveAndFlush(any(Event.class))).thenReturn(testEvent);
 
             TicketResponse result = ticketService.createTicket(1L, testRequest);
 
@@ -247,7 +247,7 @@ class TicketServiceTest {
                 ticket.setId(1L);
                 return ticket;
             });
-            when(eventRepository.save(any(Event.class))).thenReturn(testEvent);
+            when(eventRepository.saveAndFlush(any(Event.class))).thenReturn(testEvent);
 
             ticketService.createTicket(1L, testRequest);
 
