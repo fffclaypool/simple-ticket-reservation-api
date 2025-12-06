@@ -4,6 +4,7 @@ USER root
 
 ENV JMETER_VERSION=5.6.3
 ENV JMETER_HOME=/opt/apache-jmeter-${JMETER_VERSION}
+ENV ACT_VERSION=0.2.74
 ENV PATH=${JMETER_HOME}/bin:${PATH}
 
 RUN apt-get update && apt-get install -y \
@@ -20,6 +21,11 @@ RUN curl -fsSL https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${J
     && rm /tmp/jmeter.tgz \
     && chmod +x ${JMETER_HOME}/bin/jmeter
 
+RUN curl -fsSL https://github.com/nektos/act/releases/download/v${ACT_VERSION}/act_Linux_x86_64.tar.gz -o /tmp/act.tar.gz \
+    && tar -xzf /tmp/act.tar.gz -C /usr/local/bin act \
+    && rm /tmp/act.tar.gz \
+    && chmod +x /usr/local/bin/act
+
 WORKDIR /home/node/
 USER node
 
@@ -33,6 +39,7 @@ RUN echo "=== Installed Versions ===" \
     && java --version \
     && mvn --version \
     && jmeter --version \
+    && act --version \
     && echo "========================="
 
 CMD ["sleep", "infinity"]

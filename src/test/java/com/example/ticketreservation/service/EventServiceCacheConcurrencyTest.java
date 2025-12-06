@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -124,8 +126,31 @@ class EventServiceCacheConcurrencyTest {
         AtomicInteger updateCounter = new AtomicInteger(0);
         List<Future<?>> futures = new ArrayList<>();
 
-        // Read threads
-        for (int i = 0; i < readThreadCount; i++) {
+        submitReadTasks(futures, executor, startLatch, doneLatch, eventId, readThreadCount);
+        submitWriteTasks(futures, executor, startLatch, doneLatch, eventId, updateCounter, writeThreadCount);
+
+        startLatch.countDown();
+        doneLatch.await();
+        executor.shutdown();
+
+        int[] results = countSuccessesAndFailures(futures);
+        assertThat(results[0]).isGreaterThan(0);
+        assertThat(results[0] + results[1]).isEqualTo(readThreadCount + writeThreadCount);
+
+        cacheManager.getCache("events").clear();
+        EventResponse finalState = eventService.getEventById(eventId);
+        assertThat(finalState).isNotNull();
+        assertThat(finalState.getName()).startsWith("Updated Concert");
+    }
+
+    private void submitReadTasks(
+            List<Future<?>> futures,
+            ExecutorService executor,
+            CountDownLatch startLatch,
+            CountDownLatch doneLatch,
+            Long eventId,
+            int count) {
+        for (int i = 0; i < count; i++) {
             futures.add(executor.submit(() -> {
                 try {
                     startLatch.await();
@@ -139,14 +164,22 @@ class EventServiceCacheConcurrencyTest {
                 }
             }));
         }
+    }
 
-        // Write threads
-        for (int i = 0; i < writeThreadCount; i++) {
+    private void submitWriteTasks(
+            List<Future<?>> futures,
+            ExecutorService executor,
+            CountDownLatch startLatch,
+            CountDownLatch doneLatch,
+            Long eventId,
+            AtomicInteger updateCounter,
+            int count) {
+        for (int i = 0; i < count; i++) {
             futures.add(executor.submit(() -> {
                 try {
                     startLatch.await();
-                    int count = updateCounter.incrementAndGet();
-                    EventRequest updateRequest = createUpdateRequest("Updated Concert " + count);
+                    int num = updateCounter.incrementAndGet();
+                    EventRequest updateRequest = createUpdateRequest("Updated Concert " + num);
                     eventService.updateEvent(eventId, updateRequest);
                     return null;
                 } finally {
@@ -154,19 +187,24 @@ class EventServiceCacheConcurrencyTest {
                 }
             }));
         }
+    }
 
-        startLatch.countDown();
-        doneLatch.await();
-        executor.shutdown();
-
+    private int[] countSuccessesAndFailures(List<Future<?>> futures) throws Exception {
+        int successCount = 0;
+        int optimisticLockFailures = 0;
         for (Future<?> future : futures) {
-            future.get();
+            try {
+                future.get();
+                successCount++;
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof ObjectOptimisticLockingFailureException) {
+                    optimisticLockFailures++;
+                } else {
+                    throw e;
+                }
+            }
         }
-
-        cacheManager.getCache("events").clear();
-        EventResponse finalState = eventService.getEventById(eventId);
-        assertThat(finalState).isNotNull();
-        assertThat(finalState.getName()).startsWith("Updated Concert");
+        return new int[] {successCount, optimisticLockFailures};
     }
 
     private EventRequest createUpdateRequest(String name) {

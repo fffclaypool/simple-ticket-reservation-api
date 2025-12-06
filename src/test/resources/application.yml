@@ -29,3 +29,22 @@ spring:
 logging:
   level:
     com.example.ticketreservation.service: DEBUG
+
+---
+# Redis local test profile - for cache integration tests using existing Redis container
+spring:
+  config:
+    activate:
+      on-profile: redis-local-test
+
+  data:
+    redis:
+      host: ticket-redis
+      port: 6379
+
+  cache:
+    type: redis
+
+logging:
+  level:
+    com.example.ticketreservation.service: DEBUG
