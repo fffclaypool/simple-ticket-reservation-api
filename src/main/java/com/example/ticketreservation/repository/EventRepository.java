@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -29,9 +28,4 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM Event e WHERE e.id = :id")
     Optional<Event> findByIdWithLock(@Param("id") Long id);
-
-    @Modifying
-    @Query("UPDATE Event e SET e.availableSeats = e.availableSeats - :seats, e.version = e.version + 1 "
-            + "WHERE e.id = :id AND e.availableSeats >= :seats")
-    int decreaseAvailableSeats(@Param("id") Long id, @Param("seats") int seats);
 }

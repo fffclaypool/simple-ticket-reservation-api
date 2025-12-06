@@ -187,9 +187,10 @@ jobs:
           cat results.jtl
           echo ""
           echo "=== Checking for overbooking ==="
-          SUCCESS_COUNT=$(grep ",201," results.jtl | wc -l)
-          FAIL_COUNT=$(grep ",400," results.jtl | wc -l)
-          ERROR_COUNT=$(grep ",500," results.jtl | wc -l)
+          # Count only "Book Ticket" requests, excluding "Create Test Event" and "Get Final Event State"
+          SUCCESS_COUNT=$(grep "Book Ticket" results.jtl | grep ",201," | wc -l)
+          FAIL_COUNT=$(grep "Book Ticket" results.jtl | grep ",400," | wc -l)
+          ERROR_COUNT=$(grep "Book Ticket" results.jtl | grep ",500," | wc -l)
           echo "Successful bookings (201): $SUCCESS_COUNT"
           echo "No seats available (400): $FAIL_COUNT"
           echo "Server errors (500): $ERROR_COUNT"

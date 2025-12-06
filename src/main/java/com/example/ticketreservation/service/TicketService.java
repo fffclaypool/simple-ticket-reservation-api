@@ -63,12 +63,14 @@ public class TicketService {
                 request.getCustomerEmail(),
                 request.getNumberOfSeats());
 
-        // First check if event exists
+        // Acquire pessimistic lock on the event row
+        // This blocks other transactions until this one completes
         Event event = eventRepository
-                .findById(eventId)
+                .findByIdWithLock(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event", "id", eventId));
 
         // Intentional delay for load testing (simulates processing time)
+        // Other transactions will wait here due to the lock
         try {
             Thread.sleep(50);
         } catch (InterruptedException e) {
@@ -76,18 +78,14 @@ public class TicketService {
             throw new RuntimeException("Ticket creation interrupted", e);
         }
 
-        // Atomically decrease available seats - this is thread-safe
-        // Returns 0 if not enough seats available, 1 if successful
-        int updatedRows = eventRepository.decreaseAvailableSeats(eventId, request.getNumberOfSeats());
-
-        if (updatedRows == 0) {
-            // Refresh event to get current available seats for error message
-            event = eventRepository.findById(eventId).orElseThrow();
+        // Check seat availability (safe because we hold the lock)
+        if (event.getAvailableSeats() < request.getNumberOfSeats()) {
             throw new InsufficientSeatsException(request.getNumberOfSeats(), event.getAvailableSeats());
         }
 
-        // Refresh event to get updated available seats
-        event = eventRepository.findById(eventId).orElseThrow();
+        // Decrease available seats
+        event.setAvailableSeats(event.getAvailableSeats() - request.getNumberOfSeats());
+        eventRepository.save(event);
 
         // Create and save ticket
         Ticket ticket = Ticket.builder()

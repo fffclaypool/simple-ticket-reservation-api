@@ -202,8 +202,8 @@ class TicketServiceTest {
         @Test
         @DisplayName("should create ticket successfully")
         void shouldCreateTicketSuccessfully() {
-            when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
-            when(eventRepository.decreaseAvailableSeats(1L, 2)).thenReturn(1);
+            when(eventRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testEvent));
+            when(eventRepository.save(any(Event.class))).thenReturn(testEvent);
             when(ticketRepository.save(any(Ticket.class))).thenAnswer(invocation -> {
                 Ticket ticket = invocation.getArgument(0);
                 ticket.setId(1L);
@@ -214,14 +214,15 @@ class TicketServiceTest {
 
             assertThat(result.getCustomerName()).isEqualTo("John Doe");
             assertThat(result.getNumberOfSeats()).isEqualTo(2);
-            verify(eventRepository).decreaseAvailableSeats(1L, 2);
+            verify(eventRepository).findByIdWithLock(1L);
+            verify(eventRepository).save(any(Event.class));
             verify(ticketRepository).save(any(Ticket.class));
         }
 
         @Test
         @DisplayName("should throw exception when event not found")
         void shouldThrowExceptionWhenEventNotFound() {
-            when(eventRepository.findById(999L)).thenReturn(Optional.empty());
+            when(eventRepository.findByIdWithLock(999L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> ticketService.createTicket(999L, testRequest))
                     .isInstanceOf(ResourceNotFoundException.class);
@@ -231,8 +232,7 @@ class TicketServiceTest {
         @DisplayName("should throw exception when insufficient seats")
         void shouldThrowExceptionWhenInsufficientSeats() {
             testEvent.setAvailableSeats(1);
-            when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
-            when(eventRepository.decreaseAvailableSeats(1L, 2)).thenReturn(0);
+            when(eventRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testEvent));
 
             assertThatThrownBy(() -> ticketService.createTicket(1L, testRequest))
                     .isInstanceOf(InsufficientSeatsException.class);
@@ -241,8 +241,9 @@ class TicketServiceTest {
         @Test
         @DisplayName("should decrease available seats after booking")
         void shouldDecreaseAvailableSeatsAfterBooking() {
-            when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
-            when(eventRepository.decreaseAvailableSeats(1L, 2)).thenReturn(1);
+            int initialSeats = testEvent.getAvailableSeats();
+            when(eventRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testEvent));
+            when(eventRepository.save(any(Event.class))).thenReturn(testEvent);
             when(ticketRepository.save(any(Ticket.class))).thenAnswer(invocation -> {
                 Ticket ticket = invocation.getArgument(0);
                 ticket.setId(1L);
@@ -251,7 +252,8 @@ class TicketServiceTest {
 
             ticketService.createTicket(1L, testRequest);
 
-            verify(eventRepository).decreaseAvailableSeats(1L, 2);
+            assertThat(testEvent.getAvailableSeats()).isEqualTo(initialSeats - 2);
+            verify(eventRepository).save(testEvent);
         }
     }
 
