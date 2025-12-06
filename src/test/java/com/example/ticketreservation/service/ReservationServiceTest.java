@@ -1,5 +1,10 @@
 package com.example.ticketreservation.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.example.ticketreservation.dto.ReservationRequest;
 import com.example.ticketreservation.dto.ReservationResponse;
 import com.example.ticketreservation.entity.Event;
@@ -9,6 +14,9 @@ import com.example.ticketreservation.exception.InsufficientSeatsException;
 import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.repository.EventRepository;
 import com.example.ticketreservation.repository.ReservationRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,15 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationServiceTest {
@@ -146,8 +145,7 @@ class ReservationServiceTest {
         @Test
         @DisplayName("should return reservation when code found")
         void shouldReturnReservationWhenCodeFound() {
-            when(reservationRepository.findByReservationCode("RES-12345678"))
-                    .thenReturn(Optional.of(testReservation));
+            when(reservationRepository.findByReservationCode("RES-12345678")).thenReturn(Optional.of(testReservation));
 
             ReservationResponse result = reservationService.getReservationByCode("RES-12345678");
 
@@ -157,8 +155,7 @@ class ReservationServiceTest {
         @Test
         @DisplayName("should throw ResourceNotFoundException when code not found")
         void shouldThrowExceptionWhenCodeNotFound() {
-            when(reservationRepository.findByReservationCode("INVALID"))
-                    .thenReturn(Optional.empty());
+            when(reservationRepository.findByReservationCode("INVALID")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> reservationService.getReservationByCode("INVALID"))
                     .isInstanceOf(ResourceNotFoundException.class);
@@ -172,8 +169,7 @@ class ReservationServiceTest {
         @Test
         @DisplayName("should return reservations for email")
         void shouldReturnReservationsForEmail() {
-            when(reservationRepository.findByCustomerEmail("test@example.com"))
-                    .thenReturn(List.of(testReservation));
+            when(reservationRepository.findByCustomerEmail("test@example.com")).thenReturn(List.of(testReservation));
 
             List<ReservationResponse> result = reservationService.getReservationsByEmail("test@example.com");
 

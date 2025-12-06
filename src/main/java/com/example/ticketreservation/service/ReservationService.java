@@ -9,13 +9,12 @@ import com.example.ticketreservation.exception.InsufficientSeatsException;
 import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.repository.EventRepository;
 import com.example.ticketreservation.repository.ReservationRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,19 +25,19 @@ public class ReservationService {
     private final EventRepository eventRepository;
 
     public List<ReservationResponse> getAllReservations() {
-        return reservationRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return reservationRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     public ReservationResponse getReservationById(Long id) {
-        Reservation reservation = reservationRepository.findById(id)
+        Reservation reservation = reservationRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation", "id", id));
         return mapToResponse(reservation);
     }
 
     public ReservationResponse getReservationByCode(String code) {
-        Reservation reservation = reservationRepository.findByReservationCode(code)
+        Reservation reservation = reservationRepository
+                .findByReservationCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation", "code", code));
         return mapToResponse(reservation);
     }
@@ -57,7 +56,8 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponse createReservation(ReservationRequest request) {
-        Event event = eventRepository.findById(request.getEventId())
+        Event event = eventRepository
+                .findById(request.getEventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Event", "id", request.getEventId()));
 
         if (event.getAvailableSeats() < request.getNumberOfSeats()) {
@@ -83,7 +83,8 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponse cancelReservation(Long id) {
-        Reservation reservation = reservationRepository.findById(id)
+        Reservation reservation = reservationRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation", "id", id));
 
         if (reservation.getStatus() == ReservationStatus.CANCELLED) {

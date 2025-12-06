@@ -1,5 +1,11 @@
 package com.example.ticketreservation.controller;
 
+import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.example.ticketreservation.dto.ReservationRequest;
 import com.example.ticketreservation.dto.ReservationResponse;
 import com.example.ticketreservation.entity.ReservationStatus;
@@ -7,6 +13,8 @@ import com.example.ticketreservation.exception.InsufficientSeatsException;
 import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.service.ReservationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,15 +24,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ReservationController.class)
 class ReservationControllerTest {
@@ -83,8 +82,7 @@ class ReservationControllerTest {
                     .totalAmount(15000.0)
                     .status(ReservationStatus.CONFIRMED)
                     .build();
-            when(reservationService.getAllReservations())
-                    .thenReturn(List.of(testReservationResponse, reservation2));
+            when(reservationService.getAllReservations()).thenReturn(List.of(testReservationResponse, reservation2));
 
             mockMvc.perform(get("/api/reservations"))
                     .andExpect(status().isOk())
@@ -99,9 +97,7 @@ class ReservationControllerTest {
         void shouldReturnEmptyListWhenNoReservations() throws Exception {
             when(reservationService.getAllReservations()).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/reservations"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(0)));
+            mockMvc.perform(get("/api/reservations")).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(0)));
         }
     }
 
@@ -130,8 +126,7 @@ class ReservationControllerTest {
             when(reservationService.getReservationById(999L))
                     .thenThrow(new ResourceNotFoundException("Reservation", "id", 999L));
 
-            mockMvc.perform(get("/api/reservations/999"))
-                    .andExpect(status().isNotFound());
+            mockMvc.perform(get("/api/reservations/999")).andExpect(status().isNotFound());
         }
     }
 
@@ -142,8 +137,7 @@ class ReservationControllerTest {
         @Test
         @DisplayName("should return reservation when code found")
         void shouldReturnReservationWhenCodeFound() throws Exception {
-            when(reservationService.getReservationByCode("RES-12345678"))
-                    .thenReturn(testReservationResponse);
+            when(reservationService.getReservationByCode("RES-12345678")).thenReturn(testReservationResponse);
 
             mockMvc.perform(get("/api/reservations/code/RES-12345678"))
                     .andExpect(status().isOk())
@@ -156,8 +150,7 @@ class ReservationControllerTest {
             when(reservationService.getReservationByCode("INVALID"))
                     .thenThrow(new ResourceNotFoundException("Reservation", "code", "INVALID"));
 
-            mockMvc.perform(get("/api/reservations/code/INVALID"))
-                    .andExpect(status().isNotFound());
+            mockMvc.perform(get("/api/reservations/code/INVALID")).andExpect(status().isNotFound());
         }
     }
 
@@ -196,8 +189,7 @@ class ReservationControllerTest {
         @Test
         @DisplayName("should return reservations for event")
         void shouldReturnReservationsForEvent() throws Exception {
-            when(reservationService.getReservationsByEventId(1L))
-                    .thenReturn(List.of(testReservationResponse));
+            when(reservationService.getReservationsByEventId(1L)).thenReturn(List.of(testReservationResponse));
 
             mockMvc.perform(get("/api/reservations/event/1"))
                     .andExpect(status().isOk())
@@ -298,8 +290,7 @@ class ReservationControllerTest {
             when(reservationService.cancelReservation(999L))
                     .thenThrow(new ResourceNotFoundException("Reservation", "id", 999L));
 
-            mockMvc.perform(patch("/api/reservations/999/cancel"))
-                    .andExpect(status().isNotFound());
+            mockMvc.perform(patch("/api/reservations/999/cancel")).andExpect(status().isNotFound());
         }
 
         @Test
@@ -308,8 +299,7 @@ class ReservationControllerTest {
             when(reservationService.cancelReservation(1L))
                     .thenThrow(new IllegalStateException("Reservation is already cancelled"));
 
-            mockMvc.perform(patch("/api/reservations/1/cancel"))
-                    .andExpect(status().isBadRequest());
+            mockMvc.perform(patch("/api/reservations/1/cancel")).andExpect(status().isBadRequest());
         }
     }
 }

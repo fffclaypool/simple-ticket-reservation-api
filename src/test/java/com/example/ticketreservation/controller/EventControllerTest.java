@@ -1,11 +1,20 @@
 package com.example.ticketreservation.controller;
 
+import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.example.ticketreservation.dto.EventRequest;
 import com.example.ticketreservation.dto.EventResponse;
 import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.service.EventService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,16 +24,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(EventController.class)
 class EventControllerTest {
@@ -98,9 +97,7 @@ class EventControllerTest {
         void shouldReturnEmptyListWhenNoEvents() throws Exception {
             when(eventService.getAllEvents()).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/events"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(0)));
+            mockMvc.perform(get("/api/events")).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(0)));
         }
     }
 
@@ -126,11 +123,9 @@ class EventControllerTest {
         @Test
         @DisplayName("should return 404 when event not found")
         void shouldReturn404WhenEventNotFound() throws Exception {
-            when(eventService.getEventById(999L))
-                    .thenThrow(new ResourceNotFoundException("Event", "id", 999L));
+            when(eventService.getEventById(999L)).thenThrow(new ResourceNotFoundException("Event", "id", 999L));
 
-            mockMvc.perform(get("/api/events/999"))
-                    .andExpect(status().isNotFound());
+            mockMvc.perform(get("/api/events/999")).andExpect(status().isNotFound());
         }
     }
 
@@ -159,8 +154,7 @@ class EventControllerTest {
         void shouldReturnEventsMatchingSearchTerm() throws Exception {
             when(eventService.searchEventsByName("Concert")).thenReturn(List.of(testEventResponse));
 
-            mockMvc.perform(get("/api/events/search")
-                            .param("name", "Concert"))
+            mockMvc.perform(get("/api/events/search").param("name", "Concert"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)))
                     .andExpect(jsonPath("$[0].name", containsString("Concert")));
@@ -246,8 +240,7 @@ class EventControllerTest {
         void shouldDeleteEventAndReturn204() throws Exception {
             doNothing().when(eventService).deleteEvent(1L);
 
-            mockMvc.perform(delete("/api/events/1"))
-                    .andExpect(status().isNoContent());
+            mockMvc.perform(delete("/api/events/1")).andExpect(status().isNoContent());
 
             verify(eventService, times(1)).deleteEvent(1L);
         }
@@ -256,10 +249,10 @@ class EventControllerTest {
         @DisplayName("should return 404 when deleting non-existent event")
         void shouldReturn404WhenDeletingNonExistentEvent() throws Exception {
             doThrow(new ResourceNotFoundException("Event", "id", 999L))
-                    .when(eventService).deleteEvent(999L);
+                    .when(eventService)
+                    .deleteEvent(999L);
 
-            mockMvc.perform(delete("/api/events/999"))
-                    .andExpect(status().isNotFound());
+            mockMvc.perform(delete("/api/events/999")).andExpect(status().isNotFound());
         }
     }
 }
