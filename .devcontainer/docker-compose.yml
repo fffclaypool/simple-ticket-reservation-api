@@ -7,6 +7,7 @@ services:
       dockerfile: .devcontainer/Dockerfile
     volumes:
       - ..:/workspace:cached
+      - /var/run/docker.sock:/var/run/docker.sock
     command: sleep infinity
     depends_on:
       postgres:
@@ -15,6 +16,7 @@ services:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - TESTCONTAINERS_RYUK_DISABLED=true
 
   postgres:
     image: postgres:15

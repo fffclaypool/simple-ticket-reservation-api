@@ -15,3 +15,17 @@ spring:
 
   cache:
     type: none
+
+---
+# Redis test profile - for cache integration tests with Testcontainers
+spring:
+  config:
+    activate:
+      on-profile: redis-test
+
+  cache:
+    type: redis
+
+logging:
+  level:
+    com.example.ticketreservation.service: DEBUG

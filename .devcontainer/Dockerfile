@@ -10,8 +10,10 @@ RUN apt-get update && apt-get install -y \
     openjdk-17-jdk \
     maven \
     curl \
+    docker.io \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && usermod -aG docker node
 
 RUN curl -fsSL https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz -o /tmp/jmeter.tgz \
     && tar -xzf /tmp/jmeter.tgz -C /opt \
