@@ -30,13 +30,16 @@ dependencies {
     // Spring Data JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
+    // Spring Data Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     // Spring Boot Actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // PostgreSQL Driver
     runtimeOnly 'org.postgresql:postgresql'
 
-    // H2 Database (for development and testing)
+    // H2 Database (for testing and CI)
     runtimeOnly 'com.h2database:h2'
 
     // Lombok

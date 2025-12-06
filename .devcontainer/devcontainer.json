@@ -1,6 +1,30 @@
 {
-    "name": "Claude Code DevContainer",
-    "build": {
-        "dockerfile": "Dockerfile"
-    }
+    "name": "Ticket Reservation API DevContainer",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "app",
+    "workspaceFolder": "/workspace",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "vscjava.vscode-java-pack",
+                "redhat.java",
+                "vscjava.vscode-java-debug",
+                "vscjava.vscode-java-test",
+                "vscjava.vscode-gradle",
+                "vmware.vscode-spring-boot",
+                "vscjava.vscode-spring-initializr",
+                "vscjava.vscode-spring-boot-dashboard",
+                "redhat.vscode-yaml",
+                "ms-azuretools.vscode-docker"
+            ],
+            "settings": {
+                "java.configuration.updateBuildConfiguration": "automatic",
+                "java.server.launchMode": "Standard",
+                "spring-boot.ls.java.home": "/usr/lib/jvm/java-17-openjdk-amd64"
+            }
+        }
+    },
+    "forwardPorts": [8080, 5432, 6379],
+    "postCreateCommand": "chmod +x gradlew && ./gradlew build -x test -x checkstyleMain -x checkstyleTest -x spotlessCheck || true",
+    "remoteUser": "node"
 }

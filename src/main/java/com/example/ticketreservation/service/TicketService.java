@@ -14,6 +14,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,8 +26,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class TicketService {
 
+    private static final String EVENTS_CACHE = "events";
+
     private final EventRepository eventRepository;
     private final TicketRepository ticketRepository;
+    private final CacheManager cacheManager;
 
     public List<TicketResponse> getAllTickets() {
         return ticketRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
@@ -56,6 +62,7 @@ public class TicketService {
     }
 
     @Transactional
+    @CacheEvict(value = "events", key = "#eventId")
     public TicketResponse createTicket(Long eventId, TicketRequest request) {
         log.info(
                 "Creating ticket for eventId={}, customerEmail={}, seats={}",
@@ -121,9 +128,20 @@ public class TicketService {
         event.setAvailableSeats(event.getAvailableSeats() + ticket.getNumberOfSeats());
         eventRepository.save(event);
 
+        // Evict event cache since available seats changed
+        evictEventCache(event.getId());
+
         ticket.setStatus(TicketStatus.CANCELLED);
         Ticket cancelledTicket = ticketRepository.save(ticket);
         return mapToResponse(cancelledTicket);
+    }
+
+    private void evictEventCache(Long eventId) {
+        Cache cache = cacheManager.getCache(EVENTS_CACHE);
+        if (cache != null) {
+            cache.evict(eventId);
+            log.info("Evicted event cache: eventId={}", eventId);
+        }
     }
 
     private String generateTicketCode() {
