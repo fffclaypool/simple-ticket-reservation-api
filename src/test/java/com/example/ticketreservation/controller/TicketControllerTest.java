@@ -12,6 +12,7 @@ import com.example.ticketreservation.exception.InsufficientSeatsException;
 import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.service.TicketService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +50,7 @@ class TicketControllerTest {
                 .customerName("John Doe")
                 .customerEmail("john@example.com")
                 .numberOfSeats(2)
-                .totalAmount(2000.0)
+                .totalAmount(new BigDecimal("2000.0"))
                 .status(TicketStatus.CONFIRMED)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())

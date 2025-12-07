@@ -3,6 +3,7 @@ package com.example.ticketreservation.controller;
 import com.example.ticketreservation.dto.TicketRequest;
 import com.example.ticketreservation.dto.TicketResponse;
 import com.example.ticketreservation.service.TicketService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -48,7 +49,8 @@ public class TicketController {
     }
 
     @PostMapping("/events/{eventId}/tickets")
-    public ResponseEntity<TicketResponse> createTicket(@PathVariable Long eventId, @RequestBody TicketRequest request) {
+    public ResponseEntity<TicketResponse> createTicket(
+            @PathVariable Long eventId, @Valid @RequestBody TicketRequest request) {
         TicketResponse createdTicket = ticketService.createTicket(eventId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTicket);
     }

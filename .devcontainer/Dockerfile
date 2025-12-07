@@ -31,7 +31,8 @@ USER node
 
 RUN npm install -g \
     npm@11.5.2 \
-    @anthropic-ai/claude-code
+    @anthropic-ai/claude-code \
+    repomix
 
 RUN echo "=== Installed Versions ===" \
     && node --version \
@@ -40,6 +41,7 @@ RUN echo "=== Installed Versions ===" \
     && mvn --version \
     && jmeter --version \
     && act --version \
+    && repomix --version \
     && echo "========================="
 
 CMD ["sleep", "infinity"]

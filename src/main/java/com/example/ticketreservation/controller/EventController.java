@@ -3,6 +3,7 @@ package com.example.ticketreservation.controller;
 import com.example.ticketreservation.dto.EventRequest;
 import com.example.ticketreservation.dto.EventResponse;
 import com.example.ticketreservation.service.EventService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -45,13 +46,13 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity<EventResponse> createEvent(@RequestBody EventRequest request) {
+    public ResponseEntity<EventResponse> createEvent(@Valid @RequestBody EventRequest request) {
         EventResponse createdEvent = eventService.createEvent(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdEvent);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EventResponse> updateEvent(@PathVariable Long id, @RequestBody EventRequest request) {
+    public ResponseEntity<EventResponse> updateEvent(@PathVariable Long id, @Valid @RequestBody EventRequest request) {
         return ResponseEntity.ok(eventService.updateEvent(id, request));
     }
 

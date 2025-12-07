@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.ticketreservation.dto.EventRequest;
 import com.example.ticketreservation.dto.EventResponse;
 import com.example.ticketreservation.repository.EventRepository;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -62,7 +63,7 @@ class EventServiceCacheFailureTest {
                 .venue("Tokyo Dome")
                 .eventDate(LocalDateTime.of(2025, 12, 25, 19, 0))
                 .totalSeats(100)
-                .price(5000.0)
+                .price(new BigDecimal("5000.0"))
                 .build();
     }
 
@@ -81,7 +82,7 @@ class EventServiceCacheFailureTest {
                     .venue("Osaka Hall")
                     .eventDate(LocalDateTime.of(2025, 12, 26, 19, 0))
                     .totalSeats(200)
-                    .price(6000.0)
+                    .price(new BigDecimal("6000.0"))
                     .build();
             EventResponse event2 = eventService.createEvent(secondRequest);
 
@@ -122,7 +123,7 @@ class EventServiceCacheFailureTest {
                     .venue("Osaka Hall")
                     .eventDate(LocalDateTime.of(2025, 12, 26, 19, 0))
                     .totalSeats(200)
-                    .price(6000.0)
+                    .price(new BigDecimal("6000.0"))
                     .build();
             EventResponse event2 = eventService.createEvent(secondRequest);
 
@@ -137,7 +138,7 @@ class EventServiceCacheFailureTest {
                     .venue("Updated Venue")
                     .eventDate(LocalDateTime.of(2025, 12, 27, 20, 0))
                     .totalSeats(150)
-                    .price(5500.0)
+                    .price(new BigDecimal("5500.0"))
                     .build();
             eventService.updateEvent(event1.getId(), updateRequest);
 

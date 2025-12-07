@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.ticketreservation.dto.EventRequest;
 import com.example.ticketreservation.dto.EventResponse;
 import com.example.ticketreservation.repository.EventRepository;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +67,7 @@ class EventServiceCacheConcurrencyTest {
                 .venue("Tokyo Dome")
                 .eventDate(LocalDateTime.of(2025, 12, 25, 19, 0))
                 .totalSeats(100)
-                .price(5000.0)
+                .price(new BigDecimal("5000.0"))
                 .build();
     }
 
@@ -214,7 +215,7 @@ class EventServiceCacheConcurrencyTest {
                 .venue("Updated Venue")
                 .eventDate(LocalDateTime.of(2025, 12, 25, 19, 0))
                 .totalSeats(100)
-                .price(5000.0)
+                .price(new BigDecimal("5000.0"))
                 .build();
     }
 }

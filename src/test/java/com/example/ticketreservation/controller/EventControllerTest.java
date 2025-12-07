@@ -13,6 +13,7 @@ import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.service.EventService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +52,7 @@ class EventControllerTest {
                 .eventDate(LocalDateTime.of(2025, 12, 25, 19, 0))
                 .totalSeats(100)
                 .availableSeats(100)
-                .price(5000.0)
+                .price(new BigDecimal("5000.00"))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -62,7 +63,7 @@ class EventControllerTest {
                 .venue("Tokyo Dome")
                 .eventDate(LocalDateTime.of(2025, 12, 25, 19, 0))
                 .totalSeats(100)
-                .price(5000.0)
+                .price(new BigDecimal("5000.00"))
                 .build();
     }
 
@@ -80,7 +81,7 @@ class EventControllerTest {
                     .eventDate(LocalDateTime.of(2025, 12, 31, 20, 0))
                     .totalSeats(50)
                     .availableSeats(50)
-                    .price(3000.0)
+                    .price(new BigDecimal("3000.00"))
                     .build();
             when(eventService.getAllEvents()).thenReturn(List.of(testEventResponse, event2));
 
@@ -196,7 +197,7 @@ class EventControllerTest {
                     .eventDate(LocalDateTime.of(2025, 12, 26, 20, 0))
                     .totalSeats(150)
                     .availableSeats(150)
-                    .price(6000.0)
+                    .price(new BigDecimal("6000.00"))
                     .build();
 
             EventRequest updateRequest = EventRequest.builder()
@@ -205,7 +206,7 @@ class EventControllerTest {
                     .venue("Yokohama Arena")
                     .eventDate(LocalDateTime.of(2025, 12, 26, 20, 0))
                     .totalSeats(150)
-                    .price(6000.0)
+                    .price(new BigDecimal("6000.00"))
                     .build();
 
             when(eventService.updateEvent(eq(1L), any(EventRequest.class))).thenReturn(updatedResponse);
