@@ -206,8 +206,20 @@ class TicketControllerTest {
         @Test
         @DisplayName("should cancel ticket successfully")
         void shouldCancelTicketSuccessfully() throws Exception {
-            testResponse.setStatus(TicketStatus.CANCELLED);
-            when(ticketService.cancelTicket(1L)).thenReturn(testResponse);
+            TicketResponse cancelledResponse = TicketResponse.builder()
+                    .id(testResponse.getId())
+                    .ticketCode(testResponse.getTicketCode())
+                    .eventId(testResponse.getEventId())
+                    .eventName(testResponse.getEventName())
+                    .customerName(testResponse.getCustomerName())
+                    .customerEmail(testResponse.getCustomerEmail())
+                    .numberOfSeats(testResponse.getNumberOfSeats())
+                    .totalAmount(testResponse.getTotalAmount())
+                    .status(TicketStatus.CANCELLED)
+                    .createdAt(testResponse.getCreatedAt())
+                    .updatedAt(testResponse.getUpdatedAt())
+                    .build();
+            when(ticketService.cancelTicket(1L)).thenReturn(cancelledResponse);
 
             mockMvc.perform(patch("/api/tickets/1/cancel"))
                     .andExpect(status().isOk())

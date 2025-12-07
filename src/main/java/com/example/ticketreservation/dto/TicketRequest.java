@@ -1,16 +1,14 @@
 package com.example.ticketreservation.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Value;
+import lombok.extern.jackson.Jacksonized;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Value
 @Builder
+@Jacksonized
 public class TicketRequest {
-    private String customerName;
-    private String customerEmail;
-    private Integer numberOfSeats;
+    String customerName;
+    String customerEmail;
+    Integer numberOfSeats;
 }
