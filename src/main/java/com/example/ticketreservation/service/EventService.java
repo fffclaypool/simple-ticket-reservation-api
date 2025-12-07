@@ -108,7 +108,12 @@ public class EventService {
     }
 
     static int calculateNewAvailableSeats(int currentAvailable, int oldTotal, int newTotal) {
-        return currentAvailable + (newTotal - oldTotal);
+        int soldSeats = oldTotal - currentAvailable;
+        if (newTotal < soldSeats) {
+            throw new IllegalArgumentException(
+                    String.format("Cannot reduce total seats to %d: %d seats already sold", newTotal, soldSeats));
+        }
+        return newTotal - soldSeats;
     }
 
     private static EventResponse toResponse(Event event) {
