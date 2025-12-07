@@ -1,5 +1,6 @@
 package com.example.ticketreservation.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Value;
@@ -16,7 +17,7 @@ public class EventResponse {
     LocalDateTime eventDate;
     Integer totalSeats;
     Integer availableSeats;
-    Double price;
+    BigDecimal price;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

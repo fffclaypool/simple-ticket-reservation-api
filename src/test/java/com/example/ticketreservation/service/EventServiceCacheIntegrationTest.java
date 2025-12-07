@@ -7,6 +7,7 @@ import com.example.ticketreservation.dto.EventRequest;
 import com.example.ticketreservation.dto.EventResponse;
 import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.repository.EventRepository;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -64,7 +65,7 @@ class EventServiceCacheIntegrationTest {
                 .venue("Tokyo Dome")
                 .eventDate(LocalDateTime.of(2025, 12, 25, 19, 0))
                 .totalSeats(100)
-                .price(5000.0)
+                .price(new BigDecimal("5000.0"))
                 .build();
     }
 
@@ -108,7 +109,7 @@ class EventServiceCacheIntegrationTest {
                 .venue("Osaka Hall")
                 .eventDate(LocalDateTime.of(2025, 12, 26, 20, 0))
                 .totalSeats(150)
-                .price(6000.0)
+                .price(new BigDecimal("6000.0"))
                 .build();
         eventService.updateEvent(eventId, updateRequest);
 
@@ -208,7 +209,7 @@ class EventServiceCacheIntegrationTest {
                     .venue("Updated")
                     .eventDate(LocalDateTime.of(2025, 12, 25, 19, 0))
                     .totalSeats(100)
-                    .price(5000.0)
+                    .price(new BigDecimal("5000.0"))
                     .build();
 
             // When: Try to update non-existent event
@@ -234,7 +235,7 @@ class EventServiceCacheIntegrationTest {
                     .venue("Tokyo Dome 東京ドーム")
                     .eventDate(LocalDateTime.of(2025, 12, 25, 19, 30, 45))
                     .totalSeats(50000)
-                    .price(12345.67)
+                    .price(new BigDecimal("12345.67"))
                     .build();
             EventResponse created = eventService.createEvent(request);
             Long eventId = created.getId();
@@ -254,7 +255,7 @@ class EventServiceCacheIntegrationTest {
             assertThat(fromCache.getEventDate()).isEqualTo(LocalDateTime.of(2025, 12, 25, 19, 30, 45));
             assertThat(fromCache.getTotalSeats()).isEqualTo(50000);
             assertThat(fromCache.getAvailableSeats()).isEqualTo(50000);
-            assertThat(fromCache.getPrice()).isEqualTo(12345.67);
+            assertThat(fromCache.getPrice()).isEqualTo(new BigDecimal("12345.67"));
             assertThat(fromCache.getCreatedAt()).isNotNull();
             assertThat(fromCache.getUpdatedAt()).isNotNull();
         }
@@ -276,7 +277,7 @@ class EventServiceCacheIntegrationTest {
                         .venue("Test Venue")
                         .eventDate(testDate)
                         .totalSeats(100)
-                        .price(1000.0)
+                        .price(new BigDecimal("1000.0"))
                         .build();
                 EventResponse created = eventService.createEvent(request);
 
@@ -307,7 +308,7 @@ class EventServiceCacheIntegrationTest {
                     .venue("Osaka Hall")
                     .eventDate(LocalDateTime.of(2025, 12, 26, 19, 0))
                     .totalSeats(200)
-                    .price(6000.0)
+                    .price(new BigDecimal("6000.0"))
                     .build();
             eventService.createEvent(secondRequest);
 
@@ -333,7 +334,7 @@ class EventServiceCacheIntegrationTest {
                     .venue("Tokyo Dome")
                     .eventDate(LocalDateTime.now().plusDays(30))
                     .totalSeats(100)
-                    .price(5000.0)
+                    .price(new BigDecimal("5000.0"))
                     .build();
             EventResponse created = eventService.createEvent(futureEvent);
 
@@ -356,7 +357,7 @@ class EventServiceCacheIntegrationTest {
                     .venue("Blue Note")
                     .eventDate(LocalDateTime.of(2025, 12, 26, 20, 0))
                     .totalSeats(50)
-                    .price(8000.0)
+                    .price(new BigDecimal("8000.0"))
                     .build();
             eventService.createEvent(jazzEvent);
 

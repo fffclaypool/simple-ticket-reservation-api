@@ -13,6 +13,7 @@ import com.example.ticketreservation.exception.InsufficientSeatsException;
 import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.repository.EventRepository;
 import com.example.ticketreservation.repository.TicketRepository;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -60,7 +61,7 @@ class TicketServiceTest {
                 .eventDate(LocalDateTime.now().plusDays(30))
                 .totalSeats(100)
                 .availableSeats(50)
-                .price(1000.0)
+                .price(new BigDecimal("1000.0"))
                 .build();
 
         testTicket = Ticket.builder()
@@ -70,7 +71,7 @@ class TicketServiceTest {
                 .customerName("John Doe")
                 .customerEmail("john@example.com")
                 .numberOfSeats(2)
-                .totalAmount(2000.0)
+                .totalAmount(new BigDecimal("2000.0"))
                 .status(TicketStatus.CONFIRMED)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -97,7 +98,7 @@ class TicketServiceTest {
                     .customerName("Jane Doe")
                     .customerEmail("jane@example.com")
                     .numberOfSeats(1)
-                    .totalAmount(1000.0)
+                    .totalAmount(new BigDecimal("1000.0"))
                     .status(TicketStatus.CONFIRMED)
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())

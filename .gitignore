@@ -39,3 +39,4 @@ out/
 ### JMeter ###
 *.jtl
 jmeter.log
+repomix-output.xml

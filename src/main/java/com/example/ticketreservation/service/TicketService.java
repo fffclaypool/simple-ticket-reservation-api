@@ -9,6 +9,7 @@ import com.example.ticketreservation.exception.InsufficientSeatsException;
 import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.repository.EventRepository;
 import com.example.ticketreservation.repository.TicketRepository;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -163,8 +164,8 @@ public class TicketService {
         return currentSeats + cancelledSeats;
     }
 
-    static double calculateTotalAmount(double pricePerSeat, int numberOfSeats) {
-        return pricePerSeat * numberOfSeats;
+    static BigDecimal calculateTotalAmount(BigDecimal pricePerSeat, int numberOfSeats) {
+        return pricePerSeat.multiply(BigDecimal.valueOf(numberOfSeats));
     }
 
     private static String generateTicketCode() {

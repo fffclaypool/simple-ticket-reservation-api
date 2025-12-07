@@ -1,6 +1,7 @@
 package com.example.ticketreservation.dto;
 
 import com.example.ticketreservation.entity.TicketStatus;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Value;
@@ -17,7 +18,7 @@ public class TicketResponse {
     String customerName;
     String customerEmail;
     Integer numberOfSeats;
-    Double totalAmount;
+    BigDecimal totalAmount;
     TicketStatus status;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

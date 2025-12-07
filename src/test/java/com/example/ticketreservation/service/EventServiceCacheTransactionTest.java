@@ -9,6 +9,7 @@ import com.example.ticketreservation.dto.TicketRequest;
 import com.example.ticketreservation.exception.InsufficientSeatsException;
 import com.example.ticketreservation.repository.EventRepository;
 import com.example.ticketreservation.repository.TicketRepository;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -69,7 +70,7 @@ class EventServiceCacheTransactionTest {
                 .venue("Tokyo Dome")
                 .eventDate(LocalDateTime.of(2025, 12, 25, 19, 0))
                 .totalSeats(10)
-                .price(5000.0)
+                .price(new BigDecimal("5000.0"))
                 .build();
     }
 
@@ -202,7 +203,7 @@ class EventServiceCacheTransactionTest {
                     .venue("Updated Venue")
                     .eventDate(LocalDateTime.of(2025, 12, 26, 20, 0))
                     .totalSeats(20)
-                    .price(6000.0)
+                    .price(new BigDecimal("6000.0"))
                     .build();
             eventService.updateEvent(eventId, updateRequest);
 

@@ -10,6 +10,7 @@ import com.example.ticketreservation.dto.EventResponse;
 import com.example.ticketreservation.entity.Event;
 import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.repository.EventRepository;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -45,7 +46,7 @@ class EventServiceTest {
                 .eventDate(LocalDateTime.of(2025, 12, 25, 19, 0))
                 .totalSeats(100)
                 .availableSeats(100)
-                .price(5000.0)
+                .price(new BigDecimal("5000.0"))
                 .build();
 
         testEventRequest = EventRequest.builder()
@@ -54,7 +55,7 @@ class EventServiceTest {
                 .venue("Tokyo Dome")
                 .eventDate(LocalDateTime.of(2025, 12, 25, 19, 0))
                 .totalSeats(100)
-                .price(5000.0)
+                .price(new BigDecimal("5000.0"))
                 .build();
     }
 
@@ -72,7 +73,7 @@ class EventServiceTest {
                     .eventDate(LocalDateTime.of(2025, 12, 31, 20, 0))
                     .totalSeats(50)
                     .availableSeats(50)
-                    .price(3000.0)
+                    .price(new BigDecimal("3000.0"))
                     .build();
             when(eventRepository.findAll()).thenReturn(Arrays.asList(testEvent, event2));
 
@@ -208,7 +209,7 @@ class EventServiceTest {
                     .venue("Yokohama Arena")
                     .eventDate(LocalDateTime.of(2025, 12, 26, 20, 0))
                     .totalSeats(150)
-                    .price(6000.0)
+                    .price(new BigDecimal("6000.0"))
                     .build();
 
             Event updatedEvent = Event.builder()
@@ -219,7 +220,7 @@ class EventServiceTest {
                     .eventDate(LocalDateTime.of(2025, 12, 26, 20, 0))
                     .totalSeats(150)
                     .availableSeats(150)
-                    .price(6000.0)
+                    .price(new BigDecimal("6000.0"))
                     .build();
 
             when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
@@ -242,7 +243,7 @@ class EventServiceTest {
                     .venue("Tokyo Dome")
                     .eventDate(LocalDateTime.of(2025, 12, 25, 19, 0))
                     .totalSeats(120)
-                    .price(5000.0)
+                    .price(new BigDecimal("5000.0"))
                     .build();
 
             when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
