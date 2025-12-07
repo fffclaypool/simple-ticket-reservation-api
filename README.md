@@ -1,5 +1,11 @@
 # Ticket Reservation System REST API
 
+[![CI](https://github.com/fffclaypool/simple-ticket-reservation-api/actions/workflows/ci.yml/badge.svg)](https://github.com/fffclaypool/simple-ticket-reservation-api/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/fffclaypool/simple-ticket-reservation-api/graph/badge.svg)](https://codecov.io/gh/fffclaypool/simple-ticket-reservation-api)
+![Java](https://img.shields.io/badge/Java-17-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-green)
+![Gradle](https://img.shields.io/badge/Gradle-8.5-blue)
+
 A REST API for a ticket reservation system built with Java 17 and Spring Boot 3.2.
 
 ## Requirements
