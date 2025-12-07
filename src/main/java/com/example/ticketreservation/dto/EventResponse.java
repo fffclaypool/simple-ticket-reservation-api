@@ -1,24 +1,22 @@
 package com.example.ticketreservation.dto;
 
 import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Value;
+import lombok.extern.jackson.Jacksonized;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Value
 @Builder
+@Jacksonized
 public class EventResponse {
-    private Long id;
-    private String name;
-    private String description;
-    private String venue;
-    private LocalDateTime eventDate;
-    private Integer totalSeats;
-    private Integer availableSeats;
-    private Double price;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    Long id;
+    String name;
+    String description;
+    String venue;
+    LocalDateTime eventDate;
+    Integer totalSeats;
+    Integer availableSeats;
+    Double price;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 }

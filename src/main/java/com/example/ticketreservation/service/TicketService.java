@@ -10,11 +10,10 @@ import com.example.ticketreservation.exception.ResourceNotFoundException;
 import com.example.ticketreservation.repository.EventRepository;
 import com.example.ticketreservation.repository.TicketRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
@@ -32,33 +31,36 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final CacheManager cacheManager;
 
+    // === Public methods (orchestration with side effects) ===
+
     public List<TicketResponse> getAllTickets() {
-        return ticketRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
+        return ticketRepository.findAll().stream()
+                .map(TicketService::toResponse)
+                .toList();
     }
 
     public TicketResponse getTicketById(Long id) {
-        Ticket ticket =
-                ticketRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Ticket", "id", id));
-        return mapToResponse(ticket);
+        Ticket ticket = findTicketOrThrow(id);
+        return toResponse(ticket);
     }
 
     public TicketResponse getTicketByCode(String code) {
         Ticket ticket = ticketRepository
                 .findByTicketCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket", "code", code));
-        return mapToResponse(ticket);
+        return toResponse(ticket);
     }
 
     public List<TicketResponse> getTicketsByEmail(String email) {
         return ticketRepository.findByCustomerEmail(email).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+                .map(TicketService::toResponse)
+                .toList();
     }
 
     public List<TicketResponse> getTicketsByEventId(Long eventId) {
         return ticketRepository.findByEventId(eventId).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+                .map(TicketService::toResponse)
+                .toList();
     }
 
     @Transactional
@@ -70,85 +72,118 @@ public class TicketService {
                 request.getCustomerEmail(),
                 request.getNumberOfSeats());
 
-        // Acquire pessimistic lock on the event row
-        // This blocks other transactions until this one completes
-        Event event = eventRepository
-                .findByIdWithLock(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event", "id", eventId));
+        Event event = findEventWithLockOrThrow(eventId);
+        simulateProcessingDelay();
+        validateSeatAvailability(event, request.getNumberOfSeats());
 
-        // Intentional delay for load testing (simulates processing time)
-        // Other transactions will wait here due to the lock
-        try {
-            Thread.sleep(50);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Ticket creation interrupted", e);
-        }
-
-        // Check seat availability (safe because we hold the lock)
-        if (event.getAvailableSeats() < request.getNumberOfSeats()) {
-            throw new InsufficientSeatsException(request.getNumberOfSeats(), event.getAvailableSeats());
-        }
-
-        // Decrease available seats
-        event.setAvailableSeats(event.getAvailableSeats() - request.getNumberOfSeats());
+        int newAvailableSeats = calculateSeatsAfterBooking(event.getAvailableSeats(), request.getNumberOfSeats());
+        event.setAvailableSeats(newAvailableSeats);
         eventRepository.save(event);
 
-        // Create and save ticket
-        Ticket ticket = Ticket.builder()
-                .ticketCode(generateTicketCode())
-                .event(event)
-                .customerName(request.getCustomerName())
-                .customerEmail(request.getCustomerEmail())
-                .numberOfSeats(request.getNumberOfSeats())
-                .totalAmount(event.getPrice() * request.getNumberOfSeats())
-                .status(TicketStatus.CONFIRMED)
-                .build();
-
+        Ticket ticket = toNewEntity(event, request);
         Ticket savedTicket = ticketRepository.save(ticket);
+
         log.info(
                 "Ticket created successfully: ticketId={}, ticketCode={}, remainingSeats={}",
                 savedTicket.getId(),
                 savedTicket.getTicketCode(),
                 event.getAvailableSeats());
 
-        return mapToResponse(savedTicket);
+        return toResponse(savedTicket);
     }
 
     @Transactional
     public TicketResponse cancelTicket(Long id) {
-        Ticket ticket =
-                ticketRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Ticket", "id", id));
-
-        if (ticket.getStatus() == TicketStatus.CANCELLED) {
-            throw new IllegalStateException("Ticket is already cancelled");
-        }
+        Ticket ticket = findTicketOrThrow(id);
+        validateNotAlreadyCancelled(ticket);
 
         Event event = ticket.getEvent();
-        event.setAvailableSeats(event.getAvailableSeats() + ticket.getNumberOfSeats());
+        int newAvailableSeats = calculateSeatsAfterCancellation(event.getAvailableSeats(), ticket.getNumberOfSeats());
+        event.setAvailableSeats(newAvailableSeats);
         eventRepository.save(event);
 
-        // Evict event cache since available seats changed
         evictEventCache(event.getId());
 
         ticket.setStatus(TicketStatus.CANCELLED);
         Ticket cancelledTicket = ticketRepository.save(ticket);
-        return mapToResponse(cancelledTicket);
+        return toResponse(cancelledTicket);
     }
 
-    private void evictEventCache(Long eventId) {
-        Cache cache = cacheManager.getCache(EVENTS_CACHE);
-        if (cache != null) {
-            cache.evict(eventId);
-            log.info("Evicted event cache: eventId={}", eventId);
+    // === Private methods with side effects ===
+
+    private Ticket findTicketOrThrow(Long id) {
+        return ticketRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Ticket", "id", id));
+    }
+
+    private Event findEventWithLockOrThrow(Long eventId) {
+        return eventRepository
+                .findByIdWithLock(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event", "id", eventId));
+    }
+
+    private void simulateProcessingDelay() {
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Ticket creation interrupted", e);
         }
     }
 
-    private String generateTicketCode() {
+    private void evictEventCache(Long eventId) {
+        Optional.ofNullable(cacheManager.getCache(EVENTS_CACHE)).ifPresent(cache -> {
+            cache.evict(eventId);
+            log.info("Evicted event cache: eventId={}", eventId);
+        });
+    }
+
+    // === Pure functions (no side effects, static) ===
+
+    static void validateSeatAvailability(Event event, int requestedSeats) {
+        if (!hasEnoughSeats(event.getAvailableSeats(), requestedSeats)) {
+            throw new InsufficientSeatsException(requestedSeats, event.getAvailableSeats());
+        }
+    }
+
+    static boolean hasEnoughSeats(int availableSeats, int requestedSeats) {
+        return availableSeats >= requestedSeats;
+    }
+
+    static void validateNotAlreadyCancelled(Ticket ticket) {
+        if (ticket.getStatus() == TicketStatus.CANCELLED) {
+            throw new IllegalStateException("Ticket is already cancelled");
+        }
+    }
+
+    static int calculateSeatsAfterBooking(int currentSeats, int bookedSeats) {
+        return currentSeats - bookedSeats;
+    }
+
+    static int calculateSeatsAfterCancellation(int currentSeats, int cancelledSeats) {
+        return currentSeats + cancelledSeats;
+    }
+
+    static double calculateTotalAmount(double pricePerSeat, int numberOfSeats) {
+        return pricePerSeat * numberOfSeats;
+    }
+
+    private static String generateTicketCode() {
         return "TKT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
-    private TicketResponse mapToResponse(Ticket ticket) {
+    private static Ticket toNewEntity(Event event, TicketRequest request) {
+        return Ticket.builder()
+                .ticketCode(generateTicketCode())
+                .event(event)
+                .customerName(request.getCustomerName())
+                .customerEmail(request.getCustomerEmail())
+                .numberOfSeats(request.getNumberOfSeats())
+                .totalAmount(calculateTotalAmount(event.getPrice(), request.getNumberOfSeats()))
+                .status(TicketStatus.CONFIRMED)
+                .build();
+    }
+
+    private static TicketResponse toResponse(Ticket ticket) {
         return TicketResponse.builder()
                 .id(ticket.getId())
                 .ticketCode(ticket.getTicketCode())
